@@ -1,7 +1,6 @@
 from core.pipelines.voice2pose import Voice2Pose
 from core.pipelines.pose2pose import Pose2Pose
 
-
 module_dict = {
     'Voice2Pose': Voice2Pose,
     'Pose2Pose': Pose2Pose,

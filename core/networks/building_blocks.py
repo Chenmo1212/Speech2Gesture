@@ -54,12 +54,13 @@ class ConvNormRelu(nn.Module):
         x = self.act(x)
         return x
 
+
 class FCNormRelu(nn.Module):
     def __init__(self, in_features=256, out_features=256, norm='BN', leaky=False):
         super().__init__()
         self.fc = nn.Linear(in_features, out_features, bias=False)
         if norm == 'BN':
-                self.norm = nn.BatchNorm1d(out_features)
+            self.norm = nn.BatchNorm1d(out_features)
         elif norm == 'IN':
             self.norm = nn.InstanceNorm1d(out_features)
         nn.init.kaiming_normal_(self.fc.weight)

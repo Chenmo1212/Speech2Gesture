@@ -114,7 +114,6 @@ def cal_std_parted(tuple_in):
                         pose_np[i, :2, i_kpt] - np_avg[i, :2, i_kpt]) ** 2
                 num[i, i_kpt] += 1
     return np.sqrt(np_var)
-    
 
 
 def global2local_parted(poses):
@@ -145,6 +144,7 @@ def global2local_parted(poses):
                                                    poses[..., :2, handR_root, None]
 
     return poses
+
 
 def cal_mean_std():
     parser = argparse.ArgumentParser(description="argparser for cal_mean_std")

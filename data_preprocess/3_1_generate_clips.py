@@ -7,13 +7,11 @@ from tqdm import tqdm
 import librosa
 import subprocess
 
-
 # ## Constants
 FRAMES_PER_SAMPLE = 64
 FPS = 15
 SR = 16000
 LST_VIDEO_SUFFIX = [".mp4", ".MP4"]
-
 
 parser = argparse.ArgumentParser(description='Extract data for the specified speaker')
 parser.add_argument('-b', '--base_dataset_path', default=None, help="dataset root path", required=True)

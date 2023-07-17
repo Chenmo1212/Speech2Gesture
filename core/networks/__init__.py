@@ -2,7 +2,6 @@ from core.networks.keypoints_generation.generator import SequenceGeneratorCNN
 from core.networks.keypoints_generation.discriminator import PoseSequenceDiscriminator
 from core.networks.poses_reconstruction.autoencoder import Autoencoder, PoseSeqEncoder
 
-
 module_dict = {
     'SequenceGeneratorCNN': SequenceGeneratorCNN,
     'PoseSequenceDiscriminator': PoseSequenceDiscriminator,

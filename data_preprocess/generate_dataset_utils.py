@@ -93,7 +93,7 @@ def check_file():
         print(f'num_kpt: {num_kpt}')
         print(f'kpt lost: {num_frame - num_kpt}')
 
-        for i in range(77, num_frame+1):
+        for i in range(77, num_frame + 1):
             frame_fn = f"{vid_nm}_{i:05d}.jpg"
             kpt_fn = f"{vid_nm}_{i:05d}.npy"
             kpt_path = os.path.join(t_kpt_dir, kpt_fn)
@@ -118,7 +118,7 @@ def split_train_test():
     for csv_path in ls_all_csv:
         df = pd.read_csv(csv_path)
         total_num = len(df)
-        train_test_split = int(total_num*train_test_ratio)
+        train_test_split = int(total_num * train_test_ratio)
         ls_train_df.append(df.iloc[:train_test_split])
 
         idle_df = df.iloc[train_test_split: train_test_split + idle_num]
@@ -183,7 +183,7 @@ def distribute_for_multiprocess(lst_all, num_process):
     if num_total % num_process > 0:
         num_iter += 1
     for i in range(num_process - 1):
-        ans.append(lst_all[i * num_iter: (i+1) * num_iter])
+        ans.append(lst_all[i * num_iter: (i + 1) * num_iter])
     ans.append(lst_all[(num_process - 1) * num_iter:])
     return ans
 
@@ -230,8 +230,8 @@ class Speech2gestureDatasetGenerator:
     def pose137_to_pose122(x):
         x = x.transpose(1, 0)
         return np.concatenate([x[0:8, :],  # upper_body
-                               x[15:17, :],   # eyes
-                               x[25:, :]], axis=0).transpose((1, 0))   # face, hand_l and hand_r
+                               x[15:17, :],  # eyes
+                               x[25:, :]], axis=0).transpose((1, 0))  # face, hand_l and hand_r
 
     def check_kp(self, lst_in):
         idx, base = lst_in
@@ -516,7 +516,7 @@ if __name__ == "__main__":
     #                '/group/projects/voice2pose/data/006/006_videos_15fps')
 
     dir_video2frames(video_dir='/group/projects/voice2pose/data/006/006_videos_15fps',
-                     target_dir='/group/projects/voice2pose/data/006/frames_15fps',)
+                     target_dir='/group/projects/voice2pose/data/006/frames_15fps', )
     #
     # rm_files("/group/projects/voice2pose/data/luoxiang/frames")
     # show_file()

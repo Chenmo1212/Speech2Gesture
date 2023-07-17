@@ -1,6 +1,5 @@
 from core.datasets.gesture_dataset import GestureDataset
 
-
 module_dict = {
     'GestureDataset': GestureDataset,
 }

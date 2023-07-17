@@ -1,5 +1,6 @@
 import os
 import warnings
+
 warnings.simplefilter("ignore")
 import argparse
 
@@ -9,6 +10,18 @@ import torch.multiprocessing as mp
 
 from configs.default import get_cfg_defaults
 from core.pipelines import get_pipeline
+
+
+def set_custom_args():
+    custom_args = argparse.Namespace()
+    custom_args.config_file = "configs/voice2pose_sdt_bp.yaml"
+    custom_args.resume_from = None
+    custom_args.test_only = False
+    custom_args.demo_input = "demo_audio.wav"
+    custom_args.checkpoint = "./datasets/checkpoints/voice2pose_sdt_bp-oliver-ep100.pth"
+    custom_args.tag = "oliver"
+    custom_args.opts = ["DATASET.SPEAKER", "oliver"]
+    return custom_args
 
 
 def setup_config():
@@ -27,11 +40,15 @@ def setup_config():
     )
     args = parser.parse_args()
 
+    # Get the custom arguments
+    args = set_custom_args()
+
     cfg = get_cfg_defaults()
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.freeze()
     return args, cfg
+
 
 def run(args, cfg):
     torch.manual_seed(0)
@@ -50,12 +67,14 @@ def run(args, cfg):
         exp_tag = cfg_name + '-TRAIN-' + args.tag
         pipeline.train(cfg, exp_tag, args.resume_from)
 
+
 def run_distributed(rank, args, cfg):
     os.environ['MASTER_ADDR'] = cfg.SYS.MASTER_ADDR
     os.environ['MASTER_PORT'] = str(cfg.SYS.MASTER_PORT)
     dist.init_process_group("nccl", rank=rank, world_size=cfg.SYS.WORLD_SIZE)
 
     run(args, cfg)
+
 
 def main():
     args, cfg = setup_config()

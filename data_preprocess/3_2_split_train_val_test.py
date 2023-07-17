@@ -2,7 +2,6 @@ import argparse
 import os
 import pandas as pd
 
-
 parser = argparse.ArgumentParser(description='split train and validation set')
 parser.add_argument('-b', '--base_dataset_path', type=str, default=None, help="dataset root path", required=True)
 parser.add_argument('-s', '--speaker', type=str, default='Default Speaker Name', required=True)
@@ -11,7 +10,6 @@ args = parser.parse_args()
 
 DATASET_PATH = os.path.join(args.base_dataset_path, args.speaker)
 TMPCSV_PATH = os.path.join(DATASET_PATH, "tmp", "intermediate_csv")
-
 
 if __name__ == "__main__":
     train_test_ratio = 0.8
@@ -29,7 +27,7 @@ if __name__ == "__main__":
     for csv_path in ls_all_csv:
         df = pd.read_csv(csv_path)
         total_num = len(df)
-        train_test_split = int(total_num*train_test_ratio)
+        train_test_split = int(total_num * train_test_ratio)
         ls_train_df.append(df.iloc[:train_test_split])
 
         idle_df = df.iloc[train_test_split: train_test_split + idle_num]
@@ -46,5 +44,3 @@ if __name__ == "__main__":
               f"train: {train_test_split}, test: {total_num - train_test_split}")
     ans_df = pd.concat([pd.concat(ls_train_df), pd.concat(ls_idle_df), pd.concat(ls_test_df)])
     ans_df.to_csv(os.path.join(DATASET_PATH, f"clips.csv"), index=False)
-
-

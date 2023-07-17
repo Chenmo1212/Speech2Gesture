@@ -62,9 +62,9 @@ class GestureDataset(Dataset):
             if self.cfg.MAX_DEMO_LENGTH is not None:
                 max_length = self.cfg.MAX_DEMO_LENGTH * self.cfg.AUDIO_SR
                 if len(audio) > max_length:
-                    start_point = np.random.randint(0, len(audio)-max_length)
-                    audio = audio[start_point:start_point+max_length]
-                    
+                    start_point = np.random.randint(0, len(audio) - max_length)
+                    audio = audio[start_point:start_point + max_length]
+
             audio_length, num_frames = parse_audio_length(len(audio), self.cfg.AUDIO_SR, self.cfg.FPS)
             audio = crop_pad_audio(audio, audio_length)
 
@@ -100,7 +100,7 @@ class GestureDataset(Dataset):
 
             relative_poses = relative_poses_with_score[:, :2, :]
             poses_score = relative_poses_with_score[:, 2:, :].repeat(1, 2, 1)
-            
+
             speaker_stat = self.get_speaker_stat(speaker, relative_poses.shape[-1], parted=self.cfg.HIERARCHICAL_POSE)
             normalized_relative_poses = self.normalize_poses(relative_poses, speaker_stat)
 
@@ -146,17 +146,17 @@ class GestureDataset(Dataset):
 
     def parted_to_global(self, poses):
         # global relative head poses
-        indices = list(range(9, self.head_root)) + list(range(self.head_root+1, 79))
+        indices = list(range(9, self.head_root)) + list(range(self.head_root + 1, 79))
         poses[..., :2, indices] = poses[..., :2, indices] + poses[..., :2, self.head_root, None]
 
         # global relative hand poses
         poses[..., :2, 79:100] = poses[..., :2, 79:100] + poses[..., :2, self.hand_root_l, None]
         poses[..., :2, 100:121] = poses[..., :2, 100:121] + poses[..., :2, self.hand_root_r, None]
         return poses
-    
+
     def global_to_parted(self, poses):
         # global relative head poses
-        indices = list(range(9, self.head_root)) + list(range(self.head_root+1, 79))
+        indices = list(range(9, self.head_root)) + list(range(self.head_root + 1, 79))
         poses[..., :2, indices] = poses[..., :2, indices] - poses[..., :2, self.head_root, None]
 
         # global relative hand poses
@@ -177,7 +177,7 @@ class GestureDataset(Dataset):
         elif isinstance(speaker_stat['mean'], torch.Tensor):
             mean = speaker_stat['mean'].to(kp.device)
             std = speaker_stat['std'].to(kp.device)
-        
+
         if mean.dim() == 1:
             mean = mean.reshape(1, 2, self.cfg.NUM_LANDMARKS)
             std = std.reshape(1, 2, self.cfg.NUM_LANDMARKS)
@@ -186,10 +186,10 @@ class GestureDataset(Dataset):
             std = std.reshape(kp.shape[0], 1, 2, self.cfg.NUM_LANDMARKS)
         else:
             raise NotImplementedError
-        
+
         kp = (kp - mean) / std
         return kp
-    
+
     def denormalize_poses(self, kp, speaker_stat):
         if isinstance(speaker_stat['mean'], np.ndarray):
             mean = torch.Tensor(speaker_stat['mean'].astype(np.float)).to(kp.device)
@@ -197,7 +197,7 @@ class GestureDataset(Dataset):
         elif isinstance(speaker_stat['mean'], torch.Tensor):
             mean = speaker_stat['mean'].to(kp.device)
             std = speaker_stat['std'].to(kp.device)
-        
+
         if mean.dim() == 1:
             mean = mean.reshape(1, 2, self.cfg.NUM_LANDMARKS)
             std = std.reshape(1, 2, self.cfg.NUM_LANDMARKS)
@@ -209,16 +209,17 @@ class GestureDataset(Dataset):
 
         kp = kp * std + mean
         return kp
-    
+
     def get_final_results(self, poses, speaker_stat):
         poses = self.denormalize_poses(poses, speaker_stat)
         if self.cfg.HIERARCHICAL_POSE:
             poses = self.parted_to_global(poses)
 
-        scale_factor = speaker_stat['scale_factor'].to(poses.device).reshape(speaker_stat['scale_factor'].shape[0], 1, 1, -1)
+        scale_factor = speaker_stat['scale_factor'].to(poses.device).reshape(speaker_stat['scale_factor'].shape[0], 1,
+                                                                             1, -1)
         poses = poses * scale_factor
         return poses
-    
+
     def transform_normalized_parted2global(self, poses, speaker):
         ''' transform a non-hierarchical prediction into a hierarchical one
         
@@ -234,7 +235,7 @@ class GestureDataset(Dataset):
 
         poses = self.normalize_poses(poses, speaker_stat_global)
         return poses
-    
+
 
 if __name__ == "__main__":
     from configs.default import get_cfg_defaults
@@ -272,8 +273,6 @@ if __name__ == "__main__":
             img = cv2.resize(img, (1280, 720))
             cv2.imshow('0', img)
             k = cv2.waitKey(1)
-        
+
         if k == ord('q'):
             break
-
-

@@ -34,12 +34,17 @@ class VideoWriter(object):
             else:
                 func(*args)
         if 'mp4' in cfg.SYS.VIDEO_FORMAT:
-            func = self.save_video_in_mp4
-            args = (cfg, tag, frames, step, epoch, global_step, audio, base_path, extra_id)
-            if cfg.SYS.ASYNC_VIDEO_SAVING:
-                self.q.put((func, args))
-            else:
-                func(*args)
+            print("===================== Save mp4 Video Start ==========================")
+            print("tag: ", tag)
+            print("step: ", step)
+            print("extra_id: ", extra_id)
+            print("====================== Save mp4 Video End  ==========================")
+            # func = self.save_video_in_mp4
+            # args = (cfg, tag, frames, step, epoch, global_step, audio, base_path, extra_id)
+            # if cfg.SYS.ASYNC_VIDEO_SAVING:
+            #     self.q.put((func, args))
+            # else:
+            #     func(*args)
         
         if 'img' in cfg.SYS.VIDEO_FORMAT:
             func = self.save_video_in_long_img

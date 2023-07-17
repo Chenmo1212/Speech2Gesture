@@ -5,7 +5,6 @@ from multiprocessing import Pool, RLock
 import tqdm
 import shutil
 
-
 parser = argparse.ArgumentParser(description='remove outliers')
 parser.add_argument('-b', '--base_dataset_path', default=None, help="dataset root path", required=True)
 parser.add_argument('-s', '--speaker', default='Default Speaker Name', required=True)
@@ -13,7 +12,6 @@ parser.add_argument('-s', '--speaker', default='Default Speaker Name', required=
 parser.add_argument('-np', '--num_processes', type=int, default=1)
 parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
 args = parser.parse_args()
-
 
 DATASET_PATH = os.path.join(args.base_dataset_path, args.speaker)
 DIR_CLEANED_POSE = os.path.join(DATASET_PATH, "tmp", "cleaned_pose_2d")

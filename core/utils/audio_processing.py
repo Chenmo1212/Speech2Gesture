@@ -18,11 +18,13 @@ def crop_pad_audio(wav, audio_length):
         wav = np.pad(wav, [0, audio_length - len(wav)], mode='constant', constant_values=0)
     return wav
 
+
 def vis_waveform(wav):
     print("Shape of _waveform: {}".format(wav.size()))
     plt.figure()
     plt.plot(wav)
     plt.show()
+
 
 def vis_spectrogram(specgram):
     print("Shape of spectrogram: {}".format(specgram.size()))

@@ -42,18 +42,20 @@ class AudioEncoder(nn.Module):
         x = x.squeeze(2)
         return x
 
+
 class UNet_1D(nn.Module):
     def __init__(self, cfg) -> None:
         super().__init__()
 
         leaky = cfg.VOICE2POSE.GENERATOR.LEAKY_RELU
         norm = cfg.VOICE2POSE.GENERATOR.NORM
-        
+
         if cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION is not None:
-            self.e0 = ConvNormRelu('1d', 256+cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION, 256, downsample=False, norm=norm, leaky=leaky)
+            self.e0 = ConvNormRelu('1d', 256 + cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION, 256, downsample=False,
+                                   norm=norm, leaky=leaky)
         else:
             self.e0 = ConvNormRelu('1d', 256, 256, downsample=False, norm=norm, leaky=leaky)
-        
+
         self.e1 = ConvNormRelu('1d', 256, 256, downsample=False, norm=norm, leaky=leaky)
         self.e2 = ConvNormRelu('1d', 256, 256, downsample=True, norm=norm, leaky=leaky)
         self.e3 = ConvNormRelu('1d', 256, 256, downsample=True, norm=norm, leaky=leaky)
@@ -84,6 +86,7 @@ class UNet_1D(nn.Module):
 
         return d1
 
+
 class SequenceGeneratorCNN(nn.Module):
     def __init__(self, cfg) -> None:
         super().__init__()
@@ -100,8 +103,8 @@ class SequenceGeneratorCNN(nn.Module):
             ConvNormRelu('1d', 256, 256, downsample=False, norm=norm, leaky=leaky),
             ConvNormRelu('1d', 256, 256, downsample=False, norm=norm, leaky=leaky),
             ConvNormRelu('1d', 256, 256, downsample=False, norm=norm, leaky=leaky),
-            nn.Conv1d(256, cfg.DATASET.NUM_LANDMARKS*2, kernel_size=1, bias=True)
-            )
+            nn.Conv1d(256, cfg.DATASET.NUM_LANDMARKS * 2, kernel_size=1, bias=True)
+        )
 
     def forward(self, x, num_frames, code=None):
         x = self.audio_encoder(x, num_frames)  # (B, C, num_frame)
@@ -113,5 +116,5 @@ class SequenceGeneratorCNN(nn.Module):
         x = self.unet(x)
         x = self.decoder(x)
 
-        x = x.permute([0,2,1]).reshape(-1, num_frames, 2, self.cfg.DATASET.NUM_LANDMARKS)
+        x = x.permute([0, 2, 1]).reshape(-1, num_frames, 2, self.cfg.DATASET.NUM_LANDMARKS)
         return x

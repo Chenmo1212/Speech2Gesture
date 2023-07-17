@@ -12,7 +12,7 @@ try:
     if platform == "win32":
         # Change these variables to point to the correct folder (Release/x64 etc.)
         sys.path.append(dir_path + '/../../python/openpose/Release');
-        os.environ['PATH']  = os.environ['PATH'] + ';' + dir_path + '/../../x64/Release;' +  dir_path + '/../../bin;'
+        os.environ['PATH'] = os.environ['PATH'] + ';' + dir_path + '/../../x64/Release;' + dir_path + '/../../bin;'
         import pyopenpose as op
     else:
         # Change these variables to point to the correct folder (Release/x64 etc.)
@@ -21,7 +21,8 @@ try:
         # sys.path.append('/usr/local/python')
         from openpose import pyopenpose as op
 except ImportError as e:
-    print('Error: OpenPose library could not be found. Did you enable `BUILD_PYTHON` in CMake and have this Python script in the right folder?')
+    print(
+        'Error: OpenPose library could not be found. Did you enable `BUILD_PYTHON` in CMake and have this Python script in the right folder?')
     raise e
 
 # Custom Params (refer to include/openpose/flags.hpp for more parameters)
@@ -35,26 +36,29 @@ opWrapper = op.WrapperPython()
 opWrapper.configure(params)
 opWrapper.start()
 
+
 # Process Image
-def get_keypoints(frame_dir,folder,img_path,pose_dir):
+def get_keypoints(frame_dir, folder, img_path, pose_dir):
     filename, file_extension = os.path.splitext(img_path)
-    imageToProcess = os.path.join(frame_dir,folder,img_path)
-    npy_store_path = os.path.join(pose_dir,folder,filename)
+    imageToProcess = os.path.join(frame_dir, folder, img_path)
+    npy_store_path = os.path.join(pose_dir, folder, filename)
 
     datum = op.Datum()
     imageToProcess = cv2.imread(imageToProcess)
     datum.cvInputData = imageToProcess
     opWrapper.emplaceAndPop(op.VectorDatum([datum]))
 
-    if datum.poseKeypoints.shape == (1, 25, 3) and datum.faceKeypoints.shape == (1, 70, 3) and datum.handKeypoints[0].shape == (1, 21, 3) and datum.handKeypoints[1].shape == (1, 21, 3):
+    if datum.poseKeypoints.shape == (1, 25, 3) and datum.faceKeypoints.shape == (1, 70, 3) and datum.handKeypoints[
+        0].shape == (1, 21, 3) and datum.handKeypoints[1].shape == (1, 21, 3):
         # only collect frames with complete pose predictions
-        
-        npy = np.concatenate([datum.poseKeypoints,datum.faceKeypoints,datum.handKeypoints[0],datum.handKeypoints[1]],axis=1).squeeze()
-        npy = npy.transpose(1,0)
-        np.save(npy_store_path,npy)
+
+        npy = np.concatenate([datum.poseKeypoints, datum.faceKeypoints, datum.handKeypoints[0], datum.handKeypoints[1]],
+                             axis=1).squeeze()
+        npy = npy.transpose(1, 0)
+        np.save(npy_store_path, npy)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     """
     The folders are organized as follows
     {base}
@@ -78,7 +82,7 @@ if __name__=="__main__":
                 ├── 000002.npy
                 └── xxxxxx.npy
     """
-    
+
     assert len(sys.argv) == 2
     base_dir = sys.argv[1]
 
@@ -86,12 +90,12 @@ if __name__=="__main__":
     pose_dir = f"{base_dir}/tmp/raw_pose_2d/"
     cnt = 0
     for i in os.listdir(frame_dir):
-        if not os.path.exists(os.path.join(pose_dir,i)):
-            os.makedirs(os.path.join(pose_dir,i))
+        if not os.path.exists(os.path.join(pose_dir, i)):
+            os.makedirs(os.path.join(pose_dir, i))
         for j in os.listdir(os.path.join(frame_dir, i)):
             if j.endswith(".jpg"):
-                if not os.path.exists(os.path.join(pose_dir,i,j.split(".")[0]+'.npy')):
-                    cnt+=1
-                    get_keypoints(frame_dir,i,j,pose_dir)
-    print(cnt)           
+                if not os.path.exists(os.path.join(pose_dir, i, j.split(".")[0] + '.npy')):
+                    cnt += 1
+                    get_keypoints(frame_dir, i, j, pose_dir)
+    print(cnt)
     print("done!")

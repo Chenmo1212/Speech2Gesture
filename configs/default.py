@@ -1,6 +1,5 @@
 from yacs.config import CfgNode as CN
 
-
 _C = CN()
 _C.PIPELINE_TYPE = None
 
@@ -96,6 +95,7 @@ _C.SYS.WORLD_SIZE = 1
 _C.SYS.MASTER_ADDR = 'localhost'
 _C.SYS.MASTER_PORT = 21379
 
+
 def get_cfg_defaults():
-  """Get a yacs CfgNode object with default values for my_project."""
-  return _C.clone()
+    """Get a yacs CfgNode object with default values for my_project."""
+    return _C.clone()

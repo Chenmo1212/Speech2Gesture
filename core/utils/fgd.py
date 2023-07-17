@@ -56,6 +56,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     return (diff.dot(diff) + np.trace(sigma1)
             + np.trace(sigma2) - 2 * tr_covmean)
 
+
 def compute_fgd(a, b):
     mu_a, mu_b = a.mean(0), b.mean(0)
     sigma_a, sigma_b = np.cov(a, rowvar=False), np.cov(b, rowvar=False)

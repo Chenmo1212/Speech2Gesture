@@ -8,8 +8,8 @@ from multiprocessing import Pool, RLock, freeze_support
 
 def pose137_to_pose121(x):
     return np.concatenate([x[:, 0:1], x[:, 2:8],  # upper_body
-                           x[:, 15:17],   # eyes
-                           x[:, 25:]], axis=-1)   # face, hand_l and hand_r
+                           x[:, 15:17],  # eyes
+                           x[:, 25:]], axis=-1)  # face, hand_l and hand_r
 
 
 def check_is_pose_outlier(f_path):
@@ -52,11 +52,9 @@ parser.add_argument('-np', '--num_processes', type=int, default=1)
 parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
 args = parser.parse_args()
 
-
 DATASET_PATH = os.path.join(args.base_dataset_path, args.speaker)
 DIR_RAW_POSE = os.path.join(DATASET_PATH, "tmp", "raw_pose_2d")
 DIR_CLEANED_POSE = os.path.join(DATASET_PATH, "tmp", "cleaned_pose_2d")
-
 
 if __name__ == "__main__":
     if not os.path.exists(DIR_CLEANED_POSE):
