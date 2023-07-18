@@ -13,14 +13,27 @@ from core.pipelines import get_pipeline
 
 
 def set_custom_args():
+    mode = "TRAIN"
+    # mode = "TEST"
+    # mode = "DEMO"
+
     custom_args = argparse.Namespace()
     custom_args.config_file = "configs/voice2pose_sdt_bp.yaml"
-    custom_args.resume_from = None
+    custom_args.tag = "kubinec"
+    custom_args.opts = ["DATASET.SPEAKER", "kubinec"]
     custom_args.test_only = False
-    custom_args.demo_input = "demo_audio.wav"
-    custom_args.checkpoint = "./datasets/checkpoints/voice2pose_sdt_bp-oliver-ep100.pth"
-    custom_args.tag = "oliver"
-    custom_args.opts = ["DATASET.SPEAKER", "oliver"]
+    custom_args.demo_input = None
+    custom_args.resume_from = None
+
+    if mode == "TRAIN":
+        custom_args.demo_input = None
+        # custom_args.resume_from = "./output/2023-07-18_15-54-42-181668_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
+    elif mode == "TEST":
+        custom_args.test_only = True
+        custom_args.checkpoint = "./output/2023-07-18_15-54-42-181668_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
+    elif mode == "DEMO":
+        custom_args.demo_input = "demo_audio.wav"
+
     return custom_args
 
 
@@ -80,13 +93,13 @@ def main():
     args, cfg = setup_config()
 
     if cfg.SYS.DISTRIBUTED:
-        mp.spawn(run_distributed, 
-            args=(args, cfg),
-            nprocs=cfg.SYS.WORLD_SIZE,
-            join=True)
+        mp.spawn(run_distributed,
+                 args=(args, cfg),
+                 nprocs=cfg.SYS.WORLD_SIZE,
+                 join=True)
     else:
-        run(args, cfg)  
-    
+        run(args, cfg)
+
 
 if __name__ == "__main__":
     main()

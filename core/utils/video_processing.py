@@ -39,7 +39,7 @@ class VideoWriter(object):
             print("step: ", step)
             print("extra_id: ", extra_id)
             print("====================== Save mp4 Video End  ==========================")
-            # func = self.save_video_in_mp4
+            func = self.save_video_in_mp4
             # args = (cfg, tag, frames, step, epoch, global_step, audio, base_path, extra_id)
             # if cfg.SYS.ASYNC_VIDEO_SAVING:
             #     self.q.put((func, args))

@@ -33,7 +33,7 @@ class Voice2PoseModel(nn.Module):
         # Generator
         self.netG = get_model(cfg.VOICE2POSE.GENERATOR.NAME)(cfg)
 
-        ## regression loss
+        # regression loss
         self.reg_criterion = nn.L1Loss(reduction='none')
 
         if cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION is not None:
@@ -117,7 +117,7 @@ class Voice2PoseModel(nn.Module):
                         indices_b = torch.ones((len(audio),)).long() * self.cfg.DEMO.CODE_INDEX_B
                         condition_code_b = self.clips_code[indices_b].cuda()
                         condition_code = condition_code * (
-                                    1 - interpolation_coeff) + condition_code_b * interpolation_coeff
+                                1 - interpolation_coeff) + condition_code_b * interpolation_coeff
                 else:
                     rand_indices = torch.randint(self.clips_code.size(0), (len(audio),))
                     condition_code = self.clips_code[rand_indices].cuda()
@@ -139,14 +139,14 @@ class Voice2PoseModel(nn.Module):
 
         losses_dict = {}
 
-        ## netG
-        ### regression loss
+        # netG
+        # regression loss
         G_reg_loss = self.reg_criterion(poses_pred_batch, poses_gt_batch) * self.cfg.VOICE2POSE.GENERATOR.LAMBDA_REG
         G_reg_loss = G_reg_loss.mean()
         losses_dict['G_reg_loss'] = G_reg_loss
         G_loss = G_reg_loss.clone()
 
-        ### ClipCode regularization
+        # ClipCode regularization
         if condition_code is not None:
             if self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.FRAME_VARIANT:
                 clipcode_mu = condition_code.permute([0, 2, 1]).reshape(-1,
@@ -166,7 +166,7 @@ class Voice2PoseModel(nn.Module):
 
         losses_dict['G_loss'] = G_loss
 
-        ## pose encoder
+        # pose encoder
         if self.cfg.VOICE2POSE.POSE_ENCODER.NAME is not None:
             with torch.no_grad():
                 if self.cfg.DATASET.HIERARCHICAL_POSE:
@@ -185,7 +185,7 @@ class Voice2PoseModel(nn.Module):
                     'logvar_gt': logvar_gt,
                 })
 
-        ## netD_pose
+        # netD_pose
         if hasattr(self, 'netD_pose'):
             real_batch = poses_gt_batch
             fake_batch = poses_pred_batch
@@ -212,8 +212,7 @@ class Voice2PoseModel(nn.Module):
                                                            torch.zeros_like(pose_score_fake_deatchG))
             D_pose_gan_real_loss = self.pose_gan_criterion(pose_score_real, torch.ones_like(pose_score_real))
             D_pose_gan_loss = (
-                                          D_pose_gan_real_loss + D_pose_gan_fake_loss) * self.cfg.VOICE2POSE.POSE_DISCRIMINATOR.LAMBDA_GAN
-
+                                      D_pose_gan_real_loss + D_pose_gan_fake_loss) * self.cfg.VOICE2POSE.POSE_DISCRIMINATOR.LAMBDA_GAN
             losses_dict.update({
                 'D_pose_gan_loss': D_pose_gan_loss,
                 'pose_score_fake': pose_score_fake.mean(),

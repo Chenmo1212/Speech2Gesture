@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from ..building_blocks import ConvNormRelu
+from core.utils.selfAttention import ScaledDotProductAttention
 
 
 class AudioEncoder(nn.Module):
@@ -107,11 +108,15 @@ class SequenceGeneratorCNN(nn.Module):
         )
 
     def forward(self, x, num_frames, code=None):
-        x = self.audio_encoder(x, num_frames)  # (B, C, num_frame)
+        x = self.audio_encoder(x, num_frames).cuda()  # (B, C, num_frame)
 
         if self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION is not None:
             code = code.unsqueeze(2).repeat([1, 1, x.shape[-1]])
-            x = torch.cat([x, code], 1)
+            x = torch.cat([x, code], 1).cuda()
+
+        # Attention
+        # sa = ScaledDotProductAttention(d_model=x.shape[2], d_k=256, d_v=256, h=8)
+        # x = sa(x.cuda(), x.cuda(), x.cuda())
 
         x = self.unet(x)
         x = self.decoder(x)
