@@ -30,7 +30,8 @@ def set_custom_args():
         # custom_args.resume_from = "./output/2023-07-18_15-54-42-181668_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
     elif mode == "TEST":
         custom_args.test_only = True
-        custom_args.checkpoint = "./output/2023-07-18_15-54-42-181668_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
+        # custom_args.checkpoint = "./output/2023-07-18_15-54-42-181668_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
+        custom_args.checkpoint = "./output/2023-07-18_17-48-29-823046_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
     elif mode == "DEMO":
         custom_args.demo_input = "demo_audio.wav"
 

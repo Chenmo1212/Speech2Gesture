@@ -41,6 +41,10 @@ class AudioEncoder(nn.Module):
         x = self.specgram_encoder_2d(x.unsqueeze(1))
         x = F.interpolate(x, (1, num_frames), mode='bilinear')
         x = x.squeeze(2)
+
+        # Add attention
+        # sa = ScaledDotProductAttention(d_model=x.shape[2], d_k=256, d_v=256, h=8)
+        # x = sa(x.cuda(), x.cuda(), x.cuda())
         return x
 
 
@@ -71,6 +75,10 @@ class UNet_1D(nn.Module):
         self.d1 = ConvNormRelu('1d', 256, 256, downsample=False, norm=norm, leaky=leaky)
 
     def forward(self, x):
+        # Attention
+        # sa = ScaledDotProductAttention(d_model=x.shape[2], d_k=256, d_v=256, h=8)
+        # x = sa(x.cuda(), x.cuda(), x.cuda())
+
         e0 = self.e0(x)
         e1 = self.e1(e0)
         e2 = self.e2(e1)
