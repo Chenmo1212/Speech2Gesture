@@ -38,9 +38,13 @@ class AudioEncoder(nn.Module):
         )
 
     def forward(self, x, num_frames):
+        # x = self.extract_audio_features(x)
+        # print("===============x.shape: ", x.shape, x.unsqueeze(1).shape)
         x = self.specgram_encoder_2d(x.unsqueeze(1))
         x = F.interpolate(x, (1, num_frames), mode='bilinear')
         x = x.squeeze(2)
+        # print("===============x.shape: ", x.shape)
+        # print("===============x.shape: ", x.shape)
 
         # Add attention
         # sa = ScaledDotProductAttention(d_model=x.shape[2], d_k=256, d_v=256, h=8)
@@ -120,6 +124,7 @@ class SequenceGeneratorCNN(nn.Module):
 
         if self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION is not None:
             code = code.unsqueeze(2).repeat([1, 1, x.shape[-1]])
+            # print("==== code.shape: ", code.shape, x.shape)
             x = torch.cat([x, code], 1).cuda()
 
         # Attention

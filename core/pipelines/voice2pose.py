@@ -6,6 +6,9 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from sklearn import decomposition
+from transformers import Wav2Vec2Processor, Wav2Vec2Model
+import librosa
+import torch.nn.functional as F
 
 import torch
 from torch import nn
@@ -24,6 +27,11 @@ class Voice2PoseModel(nn.Module):
     def __init__(self, cfg, state_dict=None, num_train_samples=None, rank=0) -> None:
         super().__init__()
         self.cfg = cfg
+
+        # Load the pre-trained language model
+        self.model_name = "facebook/wav2vec2-base-960h"
+        self.model = Wav2Vec2Model.from_pretrained(self.model_name)
+        self.processor = Wav2Vec2Processor.from_pretrained(self.model_name)
 
         self.mel_transfm = torchaudio.transforms.MelSpectrogram(
             win_length=400, hop_length=160,
@@ -82,6 +90,46 @@ class Voice2PoseModel(nn.Module):
             self.netD_pose = get_model(cfg.VOICE2POSE.POSE_DISCRIMINATOR.NAME)(cfg)
             self.pose_gan_criterion = nn.MSELoss()
 
+    def extract_audio_features(self, x):
+        # If the tensor is not 1D, flatten it along all dimensions except for the batch dimension (dim=0)
+        if len(x.shape) > 1:
+            x = x.reshape(-1)
+
+        # semantic information
+        with torch.no_grad():
+            input_values = self.processor(x, sampling_rate=16000, padding=True, return_tensors="pt").input_values
+            outputs = self.model(input_values.cuda())
+            print(outputs)
+
+        semantic_features = outputs.last_hidden_state
+
+        # Extract the prosody information of the audio, MFCC (with 13 coefficients)
+        x_np = x.cpu().numpy()
+        rhythmic_features = torch.tensor(librosa.feature.mfcc(y=x_np, sr=16000, n_mfcc=13))
+        print("rhythmic_features", rhythmic_features.shape)
+        # Perform average pooling on semantic_features to match the length with rhythmic_features
+        semantic_features_pooled = F.interpolate(semantic_features.unsqueeze(0),
+                                                 size=(rhythmic_features.shape[1], semantic_features.shape[2]),
+                                                 mode='nearest').squeeze(0)
+        print("semantic_features_pooled", semantic_features_pooled.shape)
+        # Transpose rhythmic_features to match the order for concatenation
+        mfccs_transposed = rhythmic_features.transpose(0, 1).to(semantic_features_pooled.device)
+
+        # Concatenate semantic_features_pooled and mfccs_transposed along the last dimension
+        combined_features = torch.cat((semantic_features_pooled, mfccs_transposed.unsqueeze(0)), dim=-1)
+        print("combined_features: ", combined_features.shape)
+
+        _, original_samples, num_features = combined_features.size()
+        # Trim the combined_features to a multiple of 32 to ensure compatibility with the model
+        trim_length = original_samples // 32 * 32
+        combined_features = combined_features[:, :trim_length, :].view(32, -1, num_features)
+        print("combined_features: ", combined_features.shape)
+
+        # Clear GPU cache
+        torch.cuda.empty_cache()
+
+        return "combined_features"
+
     def forward(self, batch, dataset, return_loss=True, interpolation_coeff=None):
         # input
         audio = batch['audio'].cuda()
@@ -126,6 +174,8 @@ class Voice2PoseModel(nn.Module):
 
         # forward
         mel = self.mel_transfm(audio)
+        mel1 = self.extract_audio_features(mel)
+        # print('mel:', mel.shape, audio.shape)
         poses_pred_batch = self.netG(mel, num_frames, condition_code)
 
         results_dict = {
