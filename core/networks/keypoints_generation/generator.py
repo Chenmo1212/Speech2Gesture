@@ -1,14 +1,22 @@
 import torch
-import torch.nn.functional as F
 from torch import nn
 
 from ..building_blocks import ConvNormRelu
 from core.utils.selfAttention import ScaledDotProductAttention
 
+from transformers import Wav2Vec2Processor, Wav2Vec2Model
+import librosa
+import torch.nn.functional as F
+
 
 class AudioEncoder(nn.Module):
     def __init__(self, cfg) -> None:
         super().__init__()
+
+        # Load the pre-trained language model
+        self.model_name = "facebook/wav2vec2-base-960h"
+        self.model = Wav2Vec2Model.from_pretrained(self.model_name)
+        self.processor = Wav2Vec2Processor.from_pretrained(self.model_name)
 
         leaky = cfg.VOICE2POSE.GENERATOR.LEAKY_RELU
         norm = cfg.VOICE2POSE.GENERATOR.NORM
@@ -37,13 +45,58 @@ class AudioEncoder(nn.Module):
             down_sample_block_4
         )
 
+    def extract_audio_features(self, x):
+        original_batch = x.shape[0]
+        # If the tensor is not 1D, flatten it along all dimensions except for the batch dimension (dim=0)
+        if len(x.shape) > 1:
+            x = x.reshape(-1)
+
+        max_length = 500000
+        x_segments = [x[i:i+max_length] for i in range(0, len(x), max_length)]
+        features_list = []
+
+        # Process each small fragment and stitch the result back
+        for x_segment in x_segments:
+            with torch.no_grad():
+                input_values = self.processor(x_segment, sampling_rate=16000, padding=True, return_tensors="pt").input_values
+                outputs = self.model(input_values.cuda())
+                semantic_features = outputs.last_hidden_state
+
+                x_np = x_segment.cpu().numpy()
+                rhythmic_features = torch.tensor(librosa.feature.mfcc(y=x_np, sr=16000, n_mfcc=13))
+
+                semantic_features_pooled = F.interpolate(semantic_features.unsqueeze(0),
+                                                         size=(rhythmic_features.shape[1], semantic_features.shape[2]),
+                                                         mode='nearest').squeeze(0)
+
+                mfccs_transposed = rhythmic_features.transpose(0, 1)
+                mfccs_transposed = mfccs_transposed.to(semantic_features_pooled.device)
+
+                combined_features = torch.cat((semantic_features_pooled, mfccs_transposed.unsqueeze(0)), dim=-1)
+
+                features_list.append(combined_features)
+
+        # Stitch all feature fragments back together
+        combined_features = torch.cat(features_list, dim=1)
+
+        _, original_samples, num_features = combined_features.size()
+        # Trim the combined_features to a multiple of 32 to ensure compatibility with the model
+        trim_length = original_samples // original_batch * original_batch
+        combined_features = combined_features[:, :trim_length, :].view(original_batch, -1, num_features)
+        # print("combined_features: ", combined_features.shape)
+
+        # Clear GPU cache
+        torch.cuda.empty_cache()
+
+        return combined_features
+
     def forward(self, x, num_frames):
-        # x = self.extract_audio_features(x)
-        # print("===============x.shape: ", x.shape, x.unsqueeze(1).shape)
+        # print("1. ===============x.shape: ", x.shape, x.unsqueeze(1).shape)
+        x = self.extract_audio_features(x)
+        # print("2. ===============x.shape: ", x.shape, x.unsqueeze(1).shape)
         x = self.specgram_encoder_2d(x.unsqueeze(1))
         x = F.interpolate(x, (1, num_frames), mode='bilinear')
         x = x.squeeze(2)
-        # print("===============x.shape: ", x.shape)
         # print("===============x.shape: ", x.shape)
 
         # Add attention

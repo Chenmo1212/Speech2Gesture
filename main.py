@@ -13,9 +13,9 @@ from core.pipelines import get_pipeline
 
 
 def set_custom_args():
-    mode = "TRAIN"
+    # mode = "TRAIN"
     # mode = "TEST"
-    # mode = "DEMO"
+    mode = "DEMO"
 
     custom_args = argparse.Namespace()
     custom_args.config_file = "configs/voice2pose_sdt_bp.yaml"
@@ -25,15 +25,27 @@ def set_custom_args():
     custom_args.demo_input = None
     custom_args.resume_from = None
 
+    print("Start Mode: ", mode)
     if mode == "TRAIN":
         custom_args.demo_input = None
+        # Origin
         # custom_args.resume_from = "./output/2023-07-18_15-54-42-181668_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
+        # custom_args.resume_from = "./output/2023-07-22_15-38-50-325737_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-1_step-940.pth"
     elif mode == "TEST":
         custom_args.test_only = True
         # Without attention
-        custom_args.checkpoint = "./output/2023-07-19_18-19-19-038347_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
+        # custom_args.checkpoint = "./output/2023-07-19_18-19-19-038347_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
+        custom_args.checkpoint = "./output/2023-07-22_17-22-09-611395_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
     elif mode == "DEMO":
         custom_args.demo_input = "demo_audio.wav"
+        # Origin epoch 100
+        # custom_args.checkpoint = "./datasets/checkpoints/voice2pose_sdt_bp-kubinec-ep100.pth"
+        # Origin epoch 10
+        # custom_args.checkpoint = "./output/2023-07-19_18-19-19-038347_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
+        # Mine epoch 10
+        # custom_args.checkpoint = "./output/2023-07-22_17-22-09-611395_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
+        # Mine epoch 12
+        custom_args.checkpoint = "./output/2023-07-22_17-22-09-611395_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-12_step-11280.pth"
 
     return custom_args
 
