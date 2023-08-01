@@ -46,12 +46,13 @@ class AudioEncoder(nn.Module):
         )
 
     def extract_audio_features(self, x):
-        original_batch = x.shape[0]
+        original_features = x.clone()
+        original_batch, feat_size, sequence_length = x.shape
         # If the tensor is not 1D, flatten it along all dimensions except for the batch dimension (dim=0)
         if len(x.shape) > 1:
             x = x.reshape(-1)
 
-        max_length = 500000
+        max_length = 200000
         x_segments = [x[i:i+max_length] for i in range(0, len(x), max_length)]
         features_list = []
 
@@ -60,35 +61,58 @@ class AudioEncoder(nn.Module):
             with torch.no_grad():
                 input_values = self.processor(x_segment, sampling_rate=16000, padding=True, return_tensors="pt").input_values
                 outputs = self.model(input_values.cuda())
-                semantic_features = outputs.last_hidden_state
+                semantic_features = outputs.last_hidden_state.transpose(1, 2)
+                # print("semantic_features: ", semantic_features.shape)
 
                 x_np = x_segment.cpu().numpy()
                 rhythmic_features = torch.tensor(librosa.feature.mfcc(y=x_np, sr=16000, n_mfcc=13))
+                rhythmic_features = rhythmic_features.unsqueeze(0)
+                # print("rhythmic_features: ", rhythmic_features.shape)
 
                 semantic_features_pooled = F.interpolate(semantic_features.unsqueeze(0),
-                                                         size=(rhythmic_features.shape[1], semantic_features.shape[2]),
+                                                         size=(feat_size, semantic_features.shape[2]),
+                                                         mode='nearest').squeeze(0)
+                rhythmic_features_pooled = F.interpolate(rhythmic_features.unsqueeze(0),
+                                                         size=(feat_size, rhythmic_features.shape[2]),
                                                          mode='nearest').squeeze(0)
 
-                mfccs_transposed = rhythmic_features.transpose(0, 1)
-                mfccs_transposed = mfccs_transposed.to(semantic_features_pooled.device)
+                # print("semantic_features_pooled: ", semantic_features_pooled.shape)
+                # print("rhythmic_features_pooled: ", rhythmic_features_pooled.shape)
 
-                combined_features = torch.cat((semantic_features_pooled, mfccs_transposed.unsqueeze(0)), dim=-1)
+                rhythmic_features_pooled = rhythmic_features_pooled.to(semantic_features_pooled.device)
+
+                combined_features = torch.cat((semantic_features_pooled, rhythmic_features_pooled), dim=-1)
+                # print("1combined_features.shape", combined_features.shape)
 
                 features_list.append(combined_features)
 
         # Stitch all feature fragments back together
-        combined_features = torch.cat(features_list, dim=1)
+        combined_features = torch.cat(features_list, dim=2)
+        # print("2combined_features.shape", combined_features.shape)
 
-        _, original_samples, num_features = combined_features.size()
+        _, num_features, original_samples = combined_features.size()
         # Trim the combined_features to a multiple of 32 to ensure compatibility with the model
         trim_length = original_samples // original_batch * original_batch
-        combined_features = combined_features[:, :trim_length, :].view(original_batch, -1, num_features)
-        # print("combined_features: ", combined_features.shape)
+        combined_features = combined_features[:, :, :trim_length].reshape(original_batch, num_features, -1)
+        # print("3combined_features: ", combined_features.shape)
+        # print("4original_features: ", original_features.shape)
+
+        result = torch.cat((combined_features, original_features), dim=-1)
+        print("5result_features: ", result.shape)
+
+        # attention = nn.MultiheadAttention(embed_dim=input_feature.shape[-1], num_heads=1)
+        #
+        # # Calculate self-attention weights
+        # attention_output, _ = attention(input_feature, input_feature, input_feature)
+        #
+        # # 最终的融合特征为加权平均
+        # fused_feature = input_feature.cpu() + attention_output
+        # print("fused_feature: ", fused_feature.shape)
 
         # Clear GPU cache
         torch.cuda.empty_cache()
 
-        return combined_features
+        return result
 
     def forward(self, x, num_frames):
         # print("1. ===============x.shape: ", x.shape, x.unsqueeze(1).shape)

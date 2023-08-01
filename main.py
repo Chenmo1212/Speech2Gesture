@@ -13,9 +13,9 @@ from core.pipelines import get_pipeline
 
 
 def set_custom_args():
-    # mode = "TRAIN"
+    mode = "TRAIN"
     # mode = "TEST"
-    mode = "DEMO"
+    # mode = "DEMO"
 
     custom_args = argparse.Namespace()
     custom_args.config_file = "configs/voice2pose_sdt_bp.yaml"
