@@ -37,8 +37,10 @@ class Voice2PoseModel(nn.Module):
         self.reg_criterion = nn.L1Loss(reduction='none')
 
         if cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION is not None:
+            print("GENERATOR.CLIP_CODE.DIMENSION is not None!!!!!")
 
             if cfg.VOICE2POSE.GENERATOR.CLIP_CODE.EXTERNAL_CODE:
+                print("GENERATOR.CLIP_CODE.EXTERNAL_CODE is not None!!!!!")
                 if cfg.VOICE2POSE.GENERATOR.CLIP_CODE.EXTERNAL_CODE_PTH is not None:
                     map_location = {'cuda:0': 'cuda:%d' % rank}
                     ckpt = torch.load(cfg.VOICE2POSE.GENERATOR.CLIP_CODE.EXTERNAL_CODE_PTH, map_location=map_location)
@@ -58,6 +60,7 @@ class Voice2PoseModel(nn.Module):
                 #     'Mismatched external code from %s' % cfg.VOICE2POSE.POSE_ENCODER.AE_CHECKPOINT
 
             else:
+                print("GENERATOR.CLIP_CODE.EXTERNAL_CODE is None!!!!!")
                 if num_train_samples is None:
                     assert state_dict is not None, 'No state_dict available, while no dataset is configured.'
                     num_train_samples = state_dict['module.clips_code'].shape[0]
@@ -70,7 +73,10 @@ class Voice2PoseModel(nn.Module):
                 self.clips_code = nn.Parameter(self.clips_code,
                                                requires_grad=self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.TRAIN)
         else:
+            print("GENERATOR.CLIP_CODE.DIMENSION is None!!!!!")
             self.clips_code = None
+
+        print(self.clips_code)
 
         # pose encoder
         if self.cfg.VOICE2POSE.POSE_ENCODER.NAME is not None:

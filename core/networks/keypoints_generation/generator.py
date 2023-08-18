@@ -98,25 +98,23 @@ class AudioEncoder(nn.Module):
         # print("4original_features: ", original_features.shape)
 
         result = torch.cat((combined_features, original_features), dim=-1)
-        print("5result_features: ", result.shape)
 
-        # attention = nn.MultiheadAttention(embed_dim=input_feature.shape[-1], num_heads=1)
-        #
-        # # Calculate self-attention weights
-        # attention_output, _ = attention(input_feature, input_feature, input_feature)
-        #
-        # # 最终的融合特征为加权平均
-        # fused_feature = input_feature.cpu() + attention_output
-        # print("fused_feature: ", fused_feature.shape)
+        attention = nn.MultiheadAttention(embed_dim=result.shape[-1], num_heads=1)
+
+        # Calculate self-attention weights
+        attention_output, _ = attention(result, result, result)
+
+        # The final fusion feature is a weighted average
+        fused_feature = result.cpu() + attention_output
 
         # Clear GPU cache
         torch.cuda.empty_cache()
 
-        return result
+        return fused_feature
 
     def forward(self, x, num_frames):
         # print("1. ===============x.shape: ", x.shape, x.unsqueeze(1).shape)
-        x = self.extract_audio_features(x)
+        # x = self.extract_audio_features(x)
         # print("2. ===============x.shape: ", x.shape, x.unsqueeze(1).shape)
         x = self.specgram_encoder_2d(x.unsqueeze(1))
         x = F.interpolate(x, (1, num_frames), mode='bilinear')
