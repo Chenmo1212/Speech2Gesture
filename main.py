@@ -12,67 +12,6 @@ from configs.default import get_cfg_defaults
 from core.pipelines import get_pipeline
 
 
-def set_custom_args():
-    mode = "TRAIN"
-    # mode = "TEST"
-    # mode = "DEMO"
-
-    custom_args = argparse.Namespace()
-    custom_args.config_file = "configs/voice2pose_sdt_bp.yaml"
-    # custom_args.config_file = "configs/pose2pose.yaml"
-    custom_args.tag = "kubinec"
-    custom_args.opts = ["DATASET.SPEAKER", "kubinec"]
-    custom_args.test_only = False
-    custom_args.demo_input = None
-    custom_args.resume_from = None
-
-    print("Start Mode: ", mode)
-    if mode == "TRAIN":
-        custom_args.demo_input = None
-        # Origin
-        # custom_args.resume_from = "./output/2023-07-18_15-54-42-181668_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
-        # custom_args.resume_from = "./output/2023-07-22_15-38-50-325737_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-1_step-940.pth"
-    elif mode == "TEST":
-        custom_args.test_only = True
-        # Origin_ep10
-        # custom_args.checkpoint = "./output/Origin_ep10_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
-        # Origin_ep100
-        custom_args.checkpoint = "./datasets/checkpoints/voice2pose_sdt_bp-kubinec-ep100.pth"
-
-        # Custom_cat_ep54
-        # custom_args.checkpoint = "./output/Custom_cat_ep54_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-54_step-50760.pth"
-        # Custom_cat_ep10
-        # custom_args.checkpoint = "./output/Custom_cat_ep54_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
-
-        # Without attention
-        # custom_args.checkpoint = "./output/2023-07-19_18-19-19-038347_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
-        # custom_args.checkpoint = "./output/2023-07-22_17-22-09-611395_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
-        # custom_args.checkpoint = "./output/2023-08-01_01-40-12-225373_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-53_step-49820.pth"
-    elif mode == "DEMO":
-        custom_args.demo_input = "demo_audio.wav"
-        # Origin epoch 10
-        # custom_args.checkpoint = "./output/Origin_ep10_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
-        # Origin_ep100
-        custom_args.checkpoint = "./datasets/checkpoints/voice2pose_sdt_bp-kubinec-ep100.pth"
-
-        # Custom_cat_ep54
-        # custom_args.checkpoint = "./output/Custom_cat_ep54_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-54_step-50760.pth"
-        # Custom_cat_ep10
-        # custom_args.checkpoint = "./output/Custom_cat_ep54_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
-
-        # Origin epoch 100
-        # custom_args.checkpoint = "./datasets/checkpoints/voice2pose_sdt_bp-kubinec-ep100.pth"
-
-        # Mine epoch 10
-        # custom_args.checkpoint = "./output/2023-07-22_17-22-09-611395_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-10_step-9400.pth"
-        # Mine epoch 12
-        # custom_args.checkpoint = "./output/2023-07-22_17-22-09-611395_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-12_step-11280.pth"
-        # Mine epoch 54 - tri features
-        # custom_args.checkpoint = "./output/2023-08-01_01-40-12-225373_voice2pose_sdt_bp-TRAIN-kubinec/checkpoints/checkpoint_epoch-53_step-49820.pth"
-
-    return custom_args
-
-
 def setup_config():
     parser = argparse.ArgumentParser(description="voice2pose main program")
     parser.add_argument("--config_file", default="", metavar="FILE", help="path to config file")
@@ -88,9 +27,6 @@ def setup_config():
         nargs=argparse.REMAINDER,
     )
     args = parser.parse_args()
-
-    # Get the custom arguments
-    args = set_custom_args()
 
     cfg = get_cfg_defaults()
     cfg.merge_from_file(args.config_file)
