@@ -2,7 +2,6 @@ import torch
 from torch import nn
 
 from ..building_blocks import ConvNormRelu
-from core.utils.selfAttention import ScaledDotProductAttention
 
 from transformers import Wav2Vec2Processor, Wav2Vec2Model
 import librosa
@@ -62,12 +61,10 @@ class AudioEncoder(nn.Module):
                 input_values = self.processor(x_segment, sampling_rate=16000, padding=True, return_tensors="pt").input_values
                 outputs = self.model(input_values.cuda())
                 semantic_features = outputs.last_hidden_state.transpose(1, 2)
-                # print("semantic_features: ", semantic_features.shape)
 
                 x_np = x_segment.cpu().numpy()
                 rhythmic_features = torch.tensor(librosa.feature.mfcc(y=x_np, sr=16000, n_mfcc=13))
                 rhythmic_features = rhythmic_features.unsqueeze(0)
-                # print("rhythmic_features: ", rhythmic_features.shape)
 
                 semantic_features_pooled = F.interpolate(semantic_features.unsqueeze(0),
                                                          size=(feat_size, semantic_features.shape[2]),
@@ -75,9 +72,6 @@ class AudioEncoder(nn.Module):
                 rhythmic_features_pooled = F.interpolate(rhythmic_features.unsqueeze(0),
                                                          size=(feat_size, rhythmic_features.shape[2]),
                                                          mode='nearest').squeeze(0)
-
-                # print("semantic_features_pooled: ", semantic_features_pooled.shape)
-                # print("rhythmic_features_pooled: ", rhythmic_features_pooled.shape)
 
                 rhythmic_features_pooled = rhythmic_features_pooled.to(semantic_features_pooled.device)
 
@@ -94,8 +88,6 @@ class AudioEncoder(nn.Module):
         # Trim the combined_features to a multiple of 32 to ensure compatibility with the model
         trim_length = original_samples // original_batch * original_batch
         combined_features = combined_features[:, :, :trim_length].reshape(original_batch, num_features, -1)
-        # print("3combined_features: ", combined_features.shape)
-        # print("4original_features: ", original_features.shape)
 
         result = torch.cat((combined_features, original_features), dim=-1)
 
@@ -113,17 +105,10 @@ class AudioEncoder(nn.Module):
         return fused_feature
 
     def forward(self, x, num_frames):
-        # print("1. ===============x.shape: ", x.shape, x.unsqueeze(1).shape)
-        # x = self.extract_audio_features(x)
-        # print("2. ===============x.shape: ", x.shape, x.unsqueeze(1).shape)
+        x = self.extract_audio_features(x)
         x = self.specgram_encoder_2d(x.unsqueeze(1))
         x = F.interpolate(x, (1, num_frames), mode='bilinear')
         x = x.squeeze(2)
-        # print("===============x.shape: ", x.shape)
-
-        # Add attention
-        # sa = ScaledDotProductAttention(d_model=x.shape[2], d_k=256, d_v=256, h=8)
-        # x = sa(x.cuda(), x.cuda(), x.cuda())
         return x
 
 
@@ -154,10 +139,6 @@ class UNet_1D(nn.Module):
         self.d1 = ConvNormRelu('1d', 256, 256, downsample=False, norm=norm, leaky=leaky)
 
     def forward(self, x):
-        # Attention
-        # sa = ScaledDotProductAttention(d_model=x.shape[2], d_k=256, d_v=256, h=8)
-        # x = sa(x.cuda(), x.cuda(), x.cuda())
-
         e0 = self.e0(x)
         e1 = self.e1(e0)
         e2 = self.e2(e1)
@@ -199,12 +180,7 @@ class SequenceGeneratorCNN(nn.Module):
 
         if self.cfg.VOICE2POSE.GENERATOR.CLIP_CODE.DIMENSION is not None:
             code = code.unsqueeze(2).repeat([1, 1, x.shape[-1]])
-            # print("==== code.shape: ", code.shape, x.shape)
             x = torch.cat([x, code], 1).cuda()
-
-        # Attention
-        # sa = ScaledDotProductAttention(d_model=x.shape[2], d_k=256, d_v=256, h=8)
-        # x = sa(x.cuda(), x.cuda(), x.cuda())
 
         x = self.unet(x)
         x = self.decoder(x)
